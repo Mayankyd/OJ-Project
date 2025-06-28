@@ -35,8 +35,6 @@ const LoginPage = () => {
       [e.target.name]: e.target.value
     });
   };
-
-  // ✅ Keep only this handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
