@@ -35,6 +35,8 @@ const LoginPage = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  // ✅ Keep only this handleSubmit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -55,17 +57,28 @@ const LoginPage = () => {
       const data = await response.json();
       setIsLoading(false);
 
-      if (response.ok) {
-        alert('Success: ' + data.message);
+     if (response.ok) {
+  alert('Success: ' + data.message);
 
-        if (isLogin) {
-          window.location.href = '/';
-        } else {
-          switchMode();
-        }
-      } else {
-        alert('Error: ' + (data.error || 'Unknown error occurred'));
-      }
+  // Store login status
+  localStorage.setItem('isLoggedIn', 'true');
+  
+  // Store user information
+  if (isLogin) {
+    // For login, use the email as username and store name if provided in response
+    localStorage.setItem('userName', data.name || formData.email.split('@')[0]);
+    localStorage.setItem('userEmail', formData.email);
+  } else {
+    // For signup, use the name from form
+    localStorage.setItem('userName', formData.name);
+    localStorage.setItem('userEmail', formData.email);
+  }
+
+  window.location.href = '/';
+} else {
+  alert('Error: ' + (data.error || 'Unknown error occurred'));
+}
+
     } catch (error) {
       console.error('Error:', error);
       setIsLoading(false);
