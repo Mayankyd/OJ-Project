@@ -1,9 +1,8 @@
-// src/main.jsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import OnlineJudge from './pages/OnlineJudge';
+import OnlineJudgePage from './pages/OnlineJudgePage';
 import LoginPage from './pages/LoginPage';
 import './index.css';
 
@@ -12,7 +11,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/judge" element={<OnlineJudge />} />
+        <Route path="/judge" element={<OnlineJudgePage />} />
         <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
