@@ -144,26 +144,27 @@ const ProblemDescription = ({ problem }) => {
           )}
 
           {activeTab === 'constraints' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Constraints</h3>
-                <span className="text-sm text-gray-400">{problem.constraints?.length || 0} constraint(s)</span>
-              </div>
-              
-              <div className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-4">
-                <div className="space-y-3">
-                  {problem.constraints?.map((constraint, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                      <div className="flex-1">
-                        <code className="text-gray-300 text-sm font-mono break-all">{constraint}</code>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+  <div className="space-y-4">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-lg font-semibold text-white">Constraints</h3>
+      <span className="text-sm text-gray-400">{problem.constraints?.length || 0} constraint(s)</span>
+    </div>
+
+    <div className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-4">
+      <div className="space-y-3">
+        {problem.constraints?.map((constraint, index) => (
+          <div key={index} className="flex items-start space-x-3">
+            <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
+            <div className="flex-1">
+              <code className="text-gray-300 text-sm font-mono break-all">{constraint.text}</code>
             </div>
-          )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
         </div>
       </div>
     </div>

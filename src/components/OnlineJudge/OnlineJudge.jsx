@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import Header from '../Header';
 import ProblemList from './ProblemList';
 import ProblemDescription from './ProblemDescription';
 import CodeEditor from '../CodeEditor';
 import OutputSection from './OutputSection';
-import { problems } from '../../data/problems';
 
 const OnlineJudge = () => {
+  const [problems, setProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
@@ -15,16 +16,27 @@ const OnlineJudge = () => {
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    axios.get('http://localhost:8000/compiler/api/problems/')
+      .then((res) => {
+        setProblems(res.data);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch problems:', err);
+      });
+  }, []);
+
   const handleProblemSelect = (problem) => {
     setSelectedProblem(problem);
-    setCode(problem.defaultCode[language]);
+    // Use backend-provided defaultCode if available, else fallback to empty string
+    setCode((problem.defaultCode && problem.defaultCode[language]) || '');
     setOutput('');
   };
 
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage);
     if (selectedProblem) {
-      setCode(selectedProblem.defaultCode[newLanguage]);
+      setCode((selectedProblem.defaultCode && selectedProblem.defaultCode[newLanguage]) || '');
     }
   };
 
