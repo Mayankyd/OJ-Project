@@ -28,7 +28,6 @@ const OnlineJudge = () => {
 
   const handleProblemSelect = (problem) => {
     setSelectedProblem(problem);
-    // Use backend-provided defaultCode if available, else fallback to empty string
     setCode((problem.defaultCode && problem.defaultCode[language]) || '');
     setOutput('');
   };
@@ -40,24 +39,59 @@ const OnlineJudge = () => {
     }
   };
 
-  const handleRunCode = () => {
-    setIsRunning(true);
-    setTimeout(() => {
-      setOutput(`Code executed successfully!
-Language: ${language}
-Status: Accepted`);
-      setIsRunning(false);
-    }, 2000);
-  };
+  const handleRunCode = async () => {
+  if (!selectedProblem) return;
 
-  const handleSubmit = () => {
-    setIsRunning(true);
-    setTimeout(() => {
-      setOutput(`Submission Result:
-✅ All test cases passed!`);
-      setIsRunning(false);
-    }, 3000);
-  };
+  setIsRunning(true);
+  try {
+    const response = await axios.post('http://localhost:8000/compiler/submit/', {
+      language: language === 'python' ? 'py' : 'cpp',
+      problem_id: selectedProblem.id,
+      code,
+      mode: 'run',
+    });
+
+    const detail = response.data.details?.[0]; // only the first test case
+    setOutput(
+      `Sample Test Case ${detail.status === 'Passed' ? 'Passed' : 'Failed'}\n` +
+      `Expected Output: ${detail.expected}\n` +
+      `Your Output: ${detail.actual}`
+    );
+  } catch (error) {
+    setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
+  } finally {
+    setIsRunning(false);
+  }
+};
+  const handleSubmit = async () => {
+  if (!selectedProblem) return;
+
+  setIsRunning(true);
+  try {
+    const response = await axios.post('http://localhost:8000/compiler/submit/', {
+      language: language === 'python' ? 'py' : 'cpp',
+      problem_id: selectedProblem.id,
+      code,
+      mode: 'submit',
+    });
+
+    const allPassed = response.data.details.every(test => test.status === 'Passed');
+    setOutput(
+      `Submission Result:\nStatus: ${allPassed ? 'Accepted' : 'Wrong Answer'}\n` +
+      (allPassed
+        ? `All test cases passed!`
+        : response.data.details
+            .map((test, idx) =>
+              `Test Case ${idx + 1}: ${test.status}\nExpected: ${test.expected}\nYour Output: ${test.actual}`
+            )
+            .join('\n\n'))
+    );
+  } catch (error) {
+    setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
+  } finally {
+    setIsRunning(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-900 text-white flex flex-col">
