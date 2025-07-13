@@ -1,12 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit }) => {
+const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, language }) => {
+  const [suggestion, setSuggestion] = useState('');
   const lines = code.split('\n');
-  const lineHeight = 20; // Consistent line height
-  
+  const lineHeight = 20;
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const lastLine = code.trim().split('\n').pop();
+      if (lastLine.length > 2 && language) {
+        axios.post('http://localhost:8000/compiler/ai_syntax_suggest/', {
+          code_snippet: lastLine,
+          language: language,
+        })
+        .then((res) => setSuggestion(res.data.suggestion || ''))
+        .catch(() => setSuggestion(''));
+      }
+    }, 700);
+
+    return () => clearTimeout(timeout);
+  }, [code, language]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Tab' && suggestion) {
+      e.preventDefault();
+      const lines = code.trimEnd().split('\n');
+      lines[lines.length - 1] = suggestion;
+      setCode(lines.join('\n'));
+      setSuggestion('');
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl border border-gray-600 overflow-hidden shadow-2xl">
-      {/* Header */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-4 border-b border-gray-600 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
@@ -16,19 +43,14 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit }) =
             <span className="text-lg font-bold text-white">Code Editor</span>
           </div>
         </div>
-        
         <div className="flex items-center space-x-4">
-          {/* Status indicator */}
           <div className="flex items-center space-x-2">
             <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-yellow-400 animate-pulse' : 'bg-green-400'}`}></div>
             <span className="text-sm text-gray-300 uppercase tracking-wider font-semibold">
               {isRunning ? 'Running' : 'Ready'}
             </span>
           </div>
-          
           <div className="h-6 w-px bg-gray-600"></div>
-          
-          {/* Action buttons */}
           <div className="flex items-center space-x-3">
             <button
               onClick={handleRunCode}
@@ -45,7 +67,6 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit }) =
                 </kbd>
               )}
             </button>
-            
             <button
               onClick={handleSubmit}
               disabled={isRunning}
@@ -65,46 +86,38 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit }) =
         </div>
       </div>
 
-      {/* Editor Area */}
       <div className="flex-1 relative bg-gray-900 overflow-hidden">
         <div className="flex h-full">
-          {/* Line numbers */}
           <div className="bg-gray-800 border-r border-gray-600 flex flex-col text-right select-none min-w-[60px]">
             <div className="flex-1 overflow-auto py-3">
               {lines.map((_, index) => (
                 <div 
                   key={index} 
                   className="px-4 text-sm text-gray-400 font-mono hover:text-gray-300 transition-colors"
-                  style={{ 
-                    height: `${lineHeight}px`, 
-                    lineHeight: `${lineHeight}px`,
-                    fontSize: '13px'
-                  }}
+                  style={{ height: `${lineHeight}px`, lineHeight: `${lineHeight}px`, fontSize: '13px' }}
                 >
                   {index + 1}
                 </div>
               ))}
             </div>
           </div>
-          
-          {/* Code area */}
           <div className="flex-1 relative overflow-hidden">
             <textarea
               value={code}
               onChange={(e) => setCode(e.target.value)}
+              onKeyDown={handleKeyDown}
               className="w-full h-full bg-gray-900 text-gray-100 font-mono text-sm p-3 resize-none focus:outline-none selection:bg-blue-500/30 border-none placeholder-gray-500"
               placeholder=""
               spellCheck={false}
-              style={{ 
-                lineHeight: `${lineHeight}px`,
-                fontSize: '13px',
-                fontFamily: 'Monaco, Menlo, "Ubuntu Mono", "Fira Code", monospace'
-              }}
+              style={{ lineHeight: `${lineHeight}px`, fontSize: '13px', fontFamily: 'Monaco, Menlo, \"Ubuntu Mono\", \"Fira Code\", monospace' }}
             />
+            {suggestion && (
+              <div className="absolute bottom-3 left-3 bg-black/70 text-green-400 text-xs px-2 py-1 rounded border border-green-700">
+                Suggestion: <code>{suggestion}</code> <span className="text-gray-400 ml-2">(Press Tab to accept)</span>
+              </div>
+            )}
           </div>
         </div>
-        
-        {/* Empty state - only show when no code at all */}
         {!code && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-gray-400">
@@ -117,8 +130,7 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit }) =
           </div>
         )}
       </div>
-      
-      {/* Bottom status bar */}
+
       <div className="bg-gradient-to-r from-gray-800 to-gray-700 px-4 py-3 border-t border-gray-600 flex items-center justify-between text-sm text-gray-300">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
