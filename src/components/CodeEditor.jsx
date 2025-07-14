@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import Editor from '@monaco-editor/react';
 import axios from 'axios';
 
 const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, language }) => {
   const [suggestion, setSuggestion] = useState('');
-  const lines = code.split('\n');
-  const lineHeight = 20;
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -22,18 +21,30 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, lan
     return () => clearTimeout(timeout);
   }, [code, language]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Tab' && suggestion) {
-      e.preventDefault();
-      const lines = code.trimEnd().split('\n');
-      lines[lines.length - 1] = suggestion;
-      setCode(lines.join('\n'));
+  const handleEditorDidMount = (editor, monaco) => {
+  editor.addCommand(monaco.KeyCode.Tab, () => {
+    if (suggestion) {
+      const position = editor.getPosition();
+      const model = editor.getModel();
+      const lineNumber = position.lineNumber;
+
+      // Replace the entire current line with the suggestion
+      const range = new monaco.Range(lineNumber, 1, lineNumber, model.getLineMaxColumn(lineNumber));
+      const editOperation = {
+        range: range,
+        text: suggestion,
+        forceMoveMarkers: true
+      };
+
+      model.pushEditOperations([], [editOperation], () => null);
       setSuggestion('');
     }
-  };
+  });
+};
 
   return (
     <div className="flex-1 flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-xl border border-gray-600 overflow-hidden shadow-2xl">
+      {/* Header */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-700 p-4 border-b border-gray-600 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
@@ -86,58 +97,41 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, lan
         </div>
       </div>
 
-      <div className="flex-1 relative bg-gray-900 overflow-hidden">
-        <div className="flex h-full">
-          <div className="bg-gray-800 border-r border-gray-600 flex flex-col text-right select-none min-w-[60px]">
-            <div className="flex-1 overflow-auto py-3">
-              {lines.map((_, index) => (
-                <div 
-                  key={index} 
-                  className="px-4 text-sm text-gray-400 font-mono hover:text-gray-300 transition-colors"
-                  style={{ height: `${lineHeight}px`, lineHeight: `${lineHeight}px`, fontSize: '13px' }}
-                >
-                  {index + 1}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex-1 relative overflow-hidden">
-            <textarea
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full h-full bg-gray-900 text-gray-100 font-mono text-sm p-3 resize-none focus:outline-none selection:bg-blue-500/30 border-none placeholder-gray-500"
-              placeholder=""
-              spellCheck={false}
-              style={{ lineHeight: `${lineHeight}px`, fontSize: '13px', fontFamily: 'Monaco, Menlo, \"Ubuntu Mono\", \"Fira Code\", monospace' }}
-            />
-            {suggestion && (
-              <div className="absolute bottom-3 left-3 bg-black/70 text-green-400 text-xs px-2 py-1 rounded border border-green-700">
-                Suggestion: <code>{suggestion}</code> <span className="text-gray-400 ml-2">(Press Tab to accept)</span>
-              </div>
-            )}
-          </div>
-        </div>
-        {!code && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center text-gray-400">
-              <svg className="w-20 h-20 mx-auto mb-6 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-              <p className="text-lg font-semibold text-gray-300 mb-2">Start Writing Your Code</p>
-              <p className="text-sm opacity-75">Write your solution in the editor above</p>
-            </div>
+      {/* Monaco Code Editor */}
+      <div className="flex-1 relative">
+        <Editor
+          height="100%"
+          language={language || 'cpp'}
+          value={code}
+          onChange={(value) => setCode(value)}
+          onMount={handleEditorDidMount}
+          theme="vs-dark"
+          options={{
+            fontSize: 13,
+            tabSize: 4,
+            fontFamily: 'Fira Code, monospace',
+            minimap: { enabled: false },
+            automaticLayout: true,
+            formatOnType: true,
+            formatOnPaste: true,
+            wordWrap: 'on'
+          }}
+        />
+        {suggestion && (
+          <div className="absolute bottom-3 left-3 bg-black/70 text-green-400 text-xs px-2 py-1 rounded border border-green-700">
+            Suggestion: <code>{suggestion}</code> <span className="text-gray-400 ml-2">(Press Tab to accept)</span>
           </div>
         )}
       </div>
 
+      {/* Footer */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-700 px-4 py-3 border-t border-gray-600 flex items-center justify-between text-sm text-gray-300">
         <div className="flex items-center space-x-6">
           <div className="flex items-center space-x-2">
             <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            <span className="font-semibold">Lines: <span className="text-white">{lines.length}</span></span>
+            <span className="font-semibold">Lines: <span className="text-white">{code.split('\n').length}</span></span>
           </div>
           <div className="flex items-center space-x-2">
             <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +143,7 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, lan
             <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4L5 20h14L17 4M9 9v6m6-6v6" />
             </svg>
-            <span className="font-semibold">Words: <span className="text-white">{code.split(/\s+/).filter(word => word.length > 0).length}</span></span>
+            <span className="font-semibold">Words: <span className="text-white">{code.split(/\s+/).filter(w => w).length}</span></span>
           </div>
         </div>
         <div className="flex items-center space-x-3">

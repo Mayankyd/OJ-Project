@@ -13,6 +13,7 @@ const OnlineJudge = () => {
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
   const [output, setOutput] = useState('');
+  const [status, setStatus] = useState(''); // ✅ for AI hint trigger
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
 
@@ -30,6 +31,7 @@ const OnlineJudge = () => {
     setSelectedProblem(problem);
     setCode((problem.defaultCode && problem.defaultCode[language]) || '');
     setOutput('');
+    setStatus('');
   };
 
   const handleLanguageChange = (newLanguage) => {
@@ -57,8 +59,10 @@ const OnlineJudge = () => {
         `Expected Output: ${detail.expected}\n` +
         `Your Output: ${detail.actual}`
       );
+      setStatus(detail.status); // ✅ set status for popup
     } catch (error) {
       setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
+      setStatus('Runtime Error');
     } finally {
       setIsRunning(false);
     }
@@ -77,8 +81,10 @@ const OnlineJudge = () => {
       });
 
       const allPassed = response.data.details.every(test => test.status === 'Passed');
+      const statusText = response.data.status; // ✅ read from backend response
+
       setOutput(
-        `Submission Result:\nStatus: ${allPassed ? 'Accepted' : 'Wrong Answer'}\n` +
+        `Submission Result:\nStatus: ${statusText}\n` +
         (allPassed
           ? `All test cases passed!`
           : response.data.details
@@ -87,8 +93,12 @@ const OnlineJudge = () => {
               )
               .join('\n\n'))
       );
+
+      setStatus(statusText); // ✅ set status here for AI popup
+
     } catch (error) {
       setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
+      setStatus('Runtime Error');
     } finally {
       setIsRunning(false);
     }
@@ -117,9 +127,14 @@ const OnlineJudge = () => {
               isRunning={isRunning}
               handleRunCode={handleRunCode}
               handleSubmit={handleSubmit}
-              language={language} // ✅ Pass language prop for AI suggestion
+              language={language}
             />
-            <OutputSection output={output} />
+            <OutputSection
+              output={output}
+              status={status}
+              userCode={code}
+              currentProblemId={selectedProblem?.id || ''}
+            />
           </div>
         </div>
       )}

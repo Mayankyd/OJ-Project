@@ -110,8 +110,9 @@ const ProblemDescription = ({ problem }) => {
                         </button>
                       </div>
                       <div className="bg-slate-900/80 rounded-lg p-3 border border-slate-700/30">
-                        <code className="text-green-400 font-mono text-sm break-all">{example.input}</code>
-                      </div>
+                        <pre className="whitespace-pre-wrap text-green-400 font-mono text-sm break-words">{example.input}</pre>
+                    </div>
+
                     </div>
                     
                     <div>
@@ -125,8 +126,9 @@ const ProblemDescription = ({ problem }) => {
                         </button>
                       </div>
                       <div className="bg-slate-900/80 rounded-lg p-3 border border-slate-700/30">
-                        <code className="text-blue-400 font-mono text-sm break-all">{example.output}</code>
+                        <pre className="whitespace-pre-wrap text-blue-400 font-mono text-sm break-words">{example.output}</pre>
                       </div>
+
                     </div>
                     
                     {example.explanation && (
