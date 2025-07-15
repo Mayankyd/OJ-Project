@@ -9,23 +9,51 @@ import OutputSection from './OutputSection';
 
 const OnlineJudge = () => {
   const [problems, setProblems] = useState([]);
+  const [solvedProblems, setSolvedProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
   const [output, setOutput] = useState('');
-  const [status, setStatus] = useState(''); // ✅ for AI hint trigger
+  const [status, setStatus] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:8000/compiler/api/problems/')
-      .then((res) => {
-        setProblems(res.data);
-      })
-      .catch((err) => {
-        console.error('Failed to fetch problems:', err);
-      });
-  }, []);
+  const token = localStorage.getItem('token');
+
+  axios
+    .get('http://localhost:8000/compiler/api/problems/', {
+      headers: {
+        Authorization: token ? `Token ${token}` : undefined,
+      },
+    })
+    .then((res) => {
+      setProblems(res.data);
+    })
+    .catch((err) => {
+      console.error('Failed to fetch problems:', err);
+    });
+
+  if (!token) {
+    // ✅ Not logged in, skip fetching solved problems
+    setSolvedProblems([]);  // Clear just in case
+    return;
+  }
+
+  axios
+    .get('http://localhost:8000/compiler/api/solved/', {
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+    })
+    .then((res) => {
+      setSolvedProblems(res.data.solved_ids);
+    })
+    .catch((err) => {
+      console.error("❌ Could not fetch solved problems", err.response);
+    });
+}, []);
+
 
   const handleProblemSelect = (problem) => {
     setSelectedProblem(problem);
@@ -44,14 +72,28 @@ const OnlineJudge = () => {
   const handleRunCode = async () => {
     if (!selectedProblem) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to run code.');
+      return;
+    }
+
     setIsRunning(true);
     try {
-      const response = await axios.post('http://localhost:8000/compiler/submit/', {
-        language: language === 'python' ? 'py' : 'cpp',
-        problem_id: selectedProblem.id,
-        code,
-        mode: 'run',
-      });
+      const response = await axios.post(
+        'http://localhost:8000/compiler/submit/',
+        {
+          language: language === 'python' ? 'py' : 'cpp',
+          problem_id: selectedProblem.id,
+          code,
+          mode: 'run',
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
 
       const detail = response.data.details?.[0];
       setOutput(
@@ -59,7 +101,7 @@ const OnlineJudge = () => {
         `Expected Output: ${detail.expected}\n` +
         `Your Output: ${detail.actual}`
       );
-      setStatus(detail.status); // ✅ set status for popup
+      setStatus(detail.status);
     } catch (error) {
       setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
       setStatus('Runtime Error');
@@ -71,34 +113,57 @@ const OnlineJudge = () => {
   const handleSubmit = async () => {
     if (!selectedProblem) return;
 
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to submit solutions.');
+      return;
+    }
+
     setIsRunning(true);
     try {
-      const response = await axios.post('http://localhost:8000/compiler/submit/', {
-        language: language === 'python' ? 'py' : 'cpp',
-        problem_id: selectedProblem.id,
-        code,
-        mode: 'submit',
-      });
+      const response = await axios.post(
+        'http://localhost:8000/compiler/submit/',
+        {
+          language: language === 'python' ? 'py' : 'cpp',
+          problem_id: selectedProblem.id,
+          code,
+          mode: 'submit',
+        },
+        {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
 
-      const allPassed = response.data.details.every(test => test.status === 'Passed');
-      const statusText = response.data.status; // ✅ read from backend response
+      const allPassed = response.data.details.every((test) => test.status === 'Passed');
+      const statusText = response.data.status;
 
       setOutput(
         `Submission Result:\nStatus: ${statusText}\n` +
         (allPassed
           ? `All test cases passed!`
           : response.data.details
-              .map((test, idx) =>
-                `Test Case ${idx + 1}: ${test.status}\nExpected: ${test.expected}\nYour Output: ${test.actual}`
+              .map(
+                (test, idx) =>
+                  `Test Case ${idx + 1}: ${test.status}\nExpected: ${test.expected}\nYour Output: ${test.actual}`
               )
               .join('\n\n'))
       );
 
-      setStatus(statusText); // ✅ set status here for AI popup
+      setStatus(statusText);
+
+      // ✅ Re-fetch solved problems after successful submission
+      const solvedRes = await axios.get('http://localhost:8000/compiler/api/solved/', {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      });
+      setSolvedProblems(solvedRes.data.solved_ids);
 
     } catch (error) {
-      setOutput(`Runtime Error\n${error.response?.data?.error || error.message}`);
-      setStatus('Runtime Error');
+      setOutput(`Error\n${error.response?.data?.error || error.message}`);
+      setStatus('Error');
     } finally {
       setIsRunning(false);
     }
@@ -116,7 +181,11 @@ const OnlineJudge = () => {
       />
 
       {!selectedProblem ? (
-        <ProblemList problems={problems} handleProblemSelect={handleProblemSelect} />
+        <ProblemList
+          problems={problems}
+          handleProblemSelect={handleProblemSelect}
+          solvedProblems={solvedProblems}
+        />
       ) : (
         <div className="flex-1 flex overflow-hidden">
           <ProblemDescription problem={selectedProblem} />

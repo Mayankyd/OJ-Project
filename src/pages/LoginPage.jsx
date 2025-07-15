@@ -36,55 +36,54 @@ const LoginPage = () => {
     });
   };
 
-  // ✅ Keep only this handleSubmit
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    const url = isLogin ? 'http://127.0.0.1:8000/api/login/' : 'http://127.0.0.1:8000/api/signup/';
+  const url = isLogin
+    ? 'http://127.0.0.1:8000/api/login/'
+    : 'http://127.0.0.1:8000/api/signup/';
 
-    const payload = isLogin
-      ? { username: formData.email, password: formData.password }
-      : { username: formData.email, password: formData.password, name: formData.name };
+  const payload = isLogin
+    ? { username: formData.email, password: formData.password }
+    : { username: formData.email, password: formData.password, name: formData.name };
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-      const data = await response.json();
-      setIsLoading(false);
+    const data = await response.json();
+    setIsLoading(false);
 
-     if (response.ok) {
-  alert('Success: ' + data.message);
+    if (response.ok) {
+      alert('Success: ' + data.message);
 
-  // Store login status
-  localStorage.setItem('isLoggedIn', 'true');
-  
-  // Store user information
-  if (isLogin) {
-    // For login, use the email as username and store name if provided in response
-    localStorage.setItem('userName', data.name || formData.email.split('@')[0]);
-    localStorage.setItem('userEmail', formData.email);
-  } else {
-    // For signup, use the name from form
-    localStorage.setItem('userName', formData.name);
-    localStorage.setItem('userEmail', formData.email);
-  }
+      // Store token and login info
+      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem('userEmail', formData.email);
 
-  window.location.href = '/';
-} else {
-  alert('Error: ' + (data.error || 'Unknown error occurred'));
-}
+      if (isLogin) {
+        localStorage.setItem('token', data.token);  // ✅ store token
+        localStorage.setItem('userName', data.name || formData.email.split('@')[0]);
+      } else {
+        localStorage.setItem('userName', formData.name);
+      }
 
-    } catch (error) {
-      console.error('Error:', error);
-      setIsLoading(false);
-      alert('Error connecting to the server.');
+      window.location.href = '/';
+    } else {
+      alert('Error: ' + (data.error || 'Unknown error occurred'));
     }
-  };
+
+  } catch (error) {
+    console.error('Error:', error);
+    setIsLoading(false);
+    alert('Error connecting to the server.');
+  }
+};
+
 
   const switchMode = () => {
     setIsLogin(!isLogin);
@@ -95,6 +94,7 @@ const LoginPage = () => {
       name: ''
     });
   };
+
 
   return (
     <div className="min-h-screen bg-slate-900 text-white relative overflow-hidden">

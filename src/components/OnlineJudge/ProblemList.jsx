@@ -1,7 +1,7 @@
 import React from 'react';
 import ProblemRow from './ProblemRow';
 
-const ProblemList = ({ problems, handleProblemSelect }) => {
+const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-12">
@@ -43,6 +43,7 @@ const ProblemList = ({ problems, handleProblemSelect }) => {
               <ProblemRow
                 problem={problem}
                 handleProblemSelect={handleProblemSelect}
+                isSolved={solvedProblems?.includes(problem.id)} // ✅ pass solved flag
               />
             </div>
           ))}

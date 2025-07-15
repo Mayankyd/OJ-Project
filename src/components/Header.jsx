@@ -1,6 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const Header = ({ navigate, selectedProblem, setSelectedProblem, problems, language, handleLanguageChange }) => {
+  const [solvedCount, setSolvedCount] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:8000/compiler/api/solved-count/', {
+        headers: {
+          Authorization: `Token ${token}`,
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.solved_count !== undefined) {
+            setSolvedCount(data.solved_count);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch solved count:", err);
+        });
+    }
+  }, []);
+
   return (
     <header className="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/60 flex-shrink-0 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,12 +103,20 @@ const Header = ({ navigate, selectedProblem, setSelectedProblem, problems, langu
                     </svg>
                   </div>
                 </div>
+
+                {/* ✅ Solved count badge */}
+                {solvedCount !== null && (
+                  <div className="flex items-center space-x-2 bg-purple-600/30 px-3 py-2 rounded-lg border border-purple-400/30 text-sm text-purple-200">
+                    <span className="font-medium">Solved:</span>
+                    <span className="font-mono">{solvedCount}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
-      
+
       {/* Subtle bottom glow effect */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"></div>
     </header>
