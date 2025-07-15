@@ -115,7 +115,9 @@ const HomePage = () => {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#popular" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Problems</a>
               <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Practice</a>
-              <a href="#stats" className="text-gray-300 hover:text-white transition-colors duration-300 hover:scale-105">Leaderboard</a>
+              <Link to="/leaderboard" className="text-gray-300 hover:text-white">
+  Leaderboard
+</Link>
 
               {isLoggedIn ? (
                 <div className="relative">
@@ -230,7 +232,9 @@ const HomePage = () => {
                 
                 <a href="#features" className="text-gray-300 hover:text-white transition-colors">Problems</a>
                 <a href="#how-it-works" className="text-gray-300 hover:text-white transition-colors">Practice</a>
-                <a href="#stats" className="text-gray-300 hover:text-white transition-colors">Leaderboard</a>
+                <Link to="/leaderboard" className="text-gray-300 hover:text-white transition-colors">
+                 Leaderboard
+                </Link>
                 
                 {isLoggedIn ? (
                   <button onClick={handleLogout} className="text-red-400 hover:text-red-300 transition-colors text-left">
