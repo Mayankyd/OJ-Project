@@ -22,7 +22,7 @@ const OnlineJudge = () => {
   const token = localStorage.getItem('token');
 
   axios
-    .get('http://localhost:8000/compiler/api/problems/', {
+    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
       headers: {
         Authorization: token ? `Token ${token}` : undefined,
       },
@@ -41,7 +41,7 @@ const OnlineJudge = () => {
   }
 
   axios
-    .get('http://localhost:8000/compiler/api/solved/', {
+    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
       headers: {
         Authorization: `Token ${token}`,
       },
@@ -81,7 +81,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-        'http://localhost:8000/compiler/submit/',
+         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,
@@ -122,7 +122,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-        'http://localhost:8000/compiler/submit/',
+         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,
@@ -154,7 +154,7 @@ const OnlineJudge = () => {
       setStatus(statusText);
 
       // ✅ Re-fetch solved problems after successful submission
-      const solvedRes = await axios.get('http://localhost:8000/compiler/api/solved/', {
+      const solvedRes = await axios.get( `${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
         headers: {
           Authorization: `Token ${token}`,
         },

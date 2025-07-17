@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -41,8 +41,8 @@ const LoginPage = () => {
   setIsLoading(true);
 
   const url = isLogin
-    ? 'http://127.0.0.1:8000/api/login/'
-    : 'http://127.0.0.1:8000/api/signup/';
+    ? `${API_BASE_URL}/api/login/`
+    : `${API_BASE_URL}/api/signup/`;
 
   const payload = isLogin
     ? { username: formData.email, password: formData.password }

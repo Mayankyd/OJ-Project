@@ -6,7 +6,7 @@ const Header = ({ navigate, selectedProblem, setSelectedProblem, problems, langu
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:8000/compiler/api/solved-count/', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved-count/`, {
         headers: {
           Authorization: `Token ${token}`,
         },

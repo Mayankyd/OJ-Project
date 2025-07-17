@@ -9,7 +9,7 @@ const OutputSection = ({ output, status, userCode, currentProblemId }) => {
     const csrftoken = getCookie('csrftoken');
 
     try {
-      const res = await fetch('/compiler/ai_hint/', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/ai_hint/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

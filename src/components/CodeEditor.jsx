@@ -9,7 +9,7 @@ const CodeEditor = ({ code, setCode, isRunning, handleRunCode, handleSubmit, lan
     const timeout = setTimeout(() => {
       const lastLine = code.trim().split('\n').pop();
       if (lastLine.length > 2 && language) {
-        axios.post('http://localhost:8000/compiler/ai_syntax_suggest/', {
+        axios.post(`${import.meta.env.VITE_API_BASE_URL}/compiler/ai_syntax_suggest/`, {
           code_snippet: lastLine,
           language: language,
         })

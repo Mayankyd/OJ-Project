@@ -6,7 +6,7 @@ const LeaderboardPage = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch("http://localhost:8000/compiler/api/leaderboard/", {
+    fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/leaderboard/`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
