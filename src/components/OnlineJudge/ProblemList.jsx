@@ -2,6 +2,8 @@ import React from 'react';
 import ProblemRow from './ProblemRow';
 
 const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
+  const isValidList = Array.isArray(problems) && problems.length > 0;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-12">
@@ -25,43 +27,43 @@ const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
             </div>
             <div className="text-xs text-gray-500 font-mono">
-              {problems.length} problem{problems.length !== 1 ? 's' : ''}
+              {Array.isArray(problems) ? problems.length : 0} problem{problems.length !== 1 ? 's' : ''}
             </div>
           </div>
         </div>
 
         <div className="divide-y divide-slate-700/50">
-          {problems.map((problem, index) => (
-            <div
-              key={problem.id}
-              className="transition-all duration-200 hover:bg-slate-700/30 group"
-              style={{
-                animationDelay: `${index * 50}ms`,
-                animation: 'fadeInUp 0.5s ease-out forwards'
-              }}
-            >
-              <ProblemRow
-                problem={problem}
-                handleProblemSelect={handleProblemSelect}
-                isSolved={solvedProblems?.includes(problem.id)} // ✅ pass solved flag
-              />
+          {isValidList ? (
+            problems.map((problem, index) => (
+              <div
+                key={problem.id}
+                className="transition-all duration-200 hover:bg-slate-700/30 group"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                  animation: 'fadeInUp 0.5s ease-out forwards'
+                }}
+              >
+                <ProblemRow
+                  problem={problem}
+                  handleProblemSelect={handleProblemSelect}
+                  isSolved={solvedProblems?.includes(problem.id)}
+                />
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-16 h-16 mb-4 opacity-20">
+                <svg className="w-full h-full text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-400 mb-2">No problems available</h3>
+              <p className="text-gray-500 text-sm max-w-sm">
+                Problems will appear here once they're loaded from the server.
+              </p>
             </div>
-          ))}
+          )}
         </div>
-
-        {problems.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 mb-4 opacity-20">
-              <svg className="w-full h-full text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-400 mb-2">No problems available</h3>
-            <p className="text-gray-500 text-sm max-w-sm">
-              Problems will appear here once they're loaded
-            </p>
-          </div>
-        )}
       </div>
 
       <style jsx>{`

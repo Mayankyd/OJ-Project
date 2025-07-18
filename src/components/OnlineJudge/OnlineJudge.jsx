@@ -18,39 +18,57 @@ const OnlineJudge = () => {
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
+ useEffect(() => {
   const token = localStorage.getItem('token');
+  console.log("➡️ Using API URL:", import.meta.env.VITE_API_BASE_URL);
 
+  // ✅ Fetch Problems
   axios
     .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
       headers: {
         Authorization: token ? `Token ${token}` : undefined,
+        Accept: 'application/json',
       },
     })
     .then((res) => {
-      setProblems(res.data);
+      const fetchedProblems = Array.isArray(res.data.results) ? res.data.results : res.data;
+      console.log("✅ Problems from API:", fetchedProblems);
+      setProblems(fetchedProblems);
     })
     .catch((err) => {
-      console.error('Failed to fetch problems:', err);
+      console.error('❌ Failed to fetch problems:', err.message || err);
+      if (err.response && err.response.data) {
+        console.error("📄 Server response:", err.response.data);
+      }
     });
 
+  // ✅ If not logged in, skip solved problem fetch
   if (!token) {
-    // ✅ Not logged in, skip fetching solved problems
-    setSolvedProblems([]);  // Clear just in case
+    setSolvedProblems([]);
     return;
   }
 
+  // ✅ Fetch Solved Problems
   axios
     .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
       headers: {
         Authorization: `Token ${token}`,
+        Accept: 'application/json',
       },
     })
     .then((res) => {
-      setSolvedProblems(res.data.solved_ids);
+      if (res.data && Array.isArray(res.data.solved_ids)) {
+        setSolvedProblems(res.data.solved_ids);
+      } else {
+        console.warn("⚠️ Unexpected response format for solved problems:", res.data);
+        setSolvedProblems([]);
+      }
     })
     .catch((err) => {
-      console.error("❌ Could not fetch solved problems", err.response);
+      console.error("❌ Could not fetch solved problems:", err.message || err);
+      if (err.response && err.response.data) {
+        console.error("📄 Error details:", err.response.data);
+      }
     });
 }, []);
 
@@ -182,6 +200,7 @@ const OnlineJudge = () => {
 
       {!selectedProblem ? (
         <ProblemList
+          
           problems={problems}
           handleProblemSelect={handleProblemSelect}
           solvedProblems={solvedProblems}
