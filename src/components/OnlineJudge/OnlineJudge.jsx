@@ -8,7 +8,6 @@ import CodeEditor from '../CodeEditor';
 import OutputSection from './OutputSection';
 
 const OnlineJudge = () => {
-  const baseURL = import.meta.env.VITE_API_BASE_URL;
   const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
@@ -23,7 +22,7 @@ const OnlineJudge = () => {
   const token = localStorage.getItem('token');
 
   axios
-    .get(`${baseURL}/compiler/api/problems/`, {
+    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
       headers: {
         Authorization: token ? `Token ${token}` : undefined,
       },
@@ -42,7 +41,7 @@ const OnlineJudge = () => {
   }
 
   axios
-    .get(`${baseURL}/compiler/api/solved/`, {
+    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
       headers: {
         Authorization: `Token ${token}`,
       },
@@ -82,7 +81,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-         `${baseURL}/compiler/submit/`,
+         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,
@@ -123,7 +122,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-         `${baseURL}/compiler/submit/`,
+         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,

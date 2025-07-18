@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 const Header = ({ navigate, selectedProblem, setSelectedProblem, problems, language, handleLanguageChange }) => {
   const [solvedCount, setSolvedCount] = useState(null);
-  const baseURL = import.meta.env.VITE_API_BASE_URL;
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      fetch(`${baseURL}/compiler/api/solved-count/`, {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved-count/`, {
         headers: {
           Authorization: `Token ${token}`,
         },

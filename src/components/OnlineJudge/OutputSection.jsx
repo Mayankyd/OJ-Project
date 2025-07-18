@@ -3,13 +3,13 @@ import { getCookie } from '../../utils/csrf';
 
 const OutputSection = ({ output, status, userCode, currentProblemId }) => {
   const [loadingHint, setLoadingHint] = useState(false);
-  const baseURL = import.meta.env.VITE_API_BASE_URL;
+
   const handleAskAI = async () => {
     setLoadingHint(true);
     const csrftoken = getCookie('csrftoken');
 
     try {
-      const res = await fetch(`${baseURL}/compiler/ai_hint/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/ai_hint/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
