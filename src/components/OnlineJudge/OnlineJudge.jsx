@@ -26,13 +26,14 @@ const OnlineJudge = () => {
   axios
     .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
       headers: {
-        Authorization: token ? `Token ${token}` : undefined,
         Accept: 'application/json',
+        Authorization: token ? `Token ${token}` : undefined,
       },
     })
     .then((res) => {
       const fetchedProblems = Array.isArray(res.data.results) ? res.data.results : res.data;
       console.log("✅ Problems from API:", fetchedProblems);
+      console.log(res);
       setProblems(fetchedProblems);
     })
     .catch((err) => {
