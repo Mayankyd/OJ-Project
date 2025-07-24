@@ -24,7 +24,7 @@ const OnlineJudge = () => {
 
   // ✅ Fetch Problems
   axios
-    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
+    .get(`/compiler/api/problems/`, {
       headers: {
         Accept: 'application/json',
         Authorization: token ? `Token ${token}` : undefined,
