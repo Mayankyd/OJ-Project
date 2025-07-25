@@ -24,7 +24,7 @@ const OnlineJudge = () => {
 
   // ✅ Fetch Problems
   axios
-    .get(`http://13.232.132.53:8000/compiler/api/problems/`, {
+    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
       headers: {
         Accept: 'application/json',
         Authorization: token ? `Token ${token}` : undefined,
