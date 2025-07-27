@@ -5,30 +5,37 @@ const OutputSection = ({ output, status, userCode, currentProblemId }) => {
   const [loadingHint, setLoadingHint] = useState(false);
 
   const handleAskAI = async () => {
-    setLoadingHint(true);
-    const csrftoken = getCookie('csrftoken');
+  setLoadingHint(true);
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/ai_hint/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrftoken
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          code: userCode,
-          problem_id: currentProblemId
-        })
-      });
-      const data = await res.json();
-      alert(data.hint || "No hint available.");
-    } catch (error) {
-      alert("Failed to fetch hint. Please try again later.");
-    } finally {
-      setLoadingHint(false);
+  const token = localStorage.getItem('token');  // ✅ Make sure token exists
+
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/ai_hint/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Token ${token}` : '',  // ✅ Send token here
+      },
+      body: JSON.stringify({
+        code: userCode,
+        problem_id: currentProblemId
+      })
+    });
+
+    if (res.status === 401) {
+      alert("You're not logged in. Please log in to get a hint.");
+      return;
     }
-  };
+
+    const data = await res.json();
+    alert(data.hint || "No hint available.");
+  } catch (error) {
+    alert("Failed to fetch hint. Please try again later.");
+  } finally {
+    setLoadingHint(false);
+  }
+};
+
 
   return (
     <div className="h-1/3 border-t border-slate-700 bg-slate-800/30 flex flex-col">
