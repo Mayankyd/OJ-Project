@@ -8,6 +8,11 @@ import CodeEditor from '../CodeEditor';
 import OutputSection from './OutputSection';
 
 const OnlineJudge = () => {
+  const [token, setToken] = useState(() => {
+    const stored = localStorage.getItem('token');
+    return stored && stored !== 'null' && stored !== 'undefined' ? stored : null;
+  });
+
   const [problems, setProblems] = useState([]);
   const [solvedProblems, setSolvedProblems] = useState([]);
   const [selectedProblem, setSelectedProblem] = useState(null);
@@ -18,61 +23,64 @@ const OnlineJudge = () => {
   const [isRunning, setIsRunning] = useState(false);
   const navigate = useNavigate();
 
- useEffect(() => {
-  const token = localStorage.getItem('token');
-  console.log("➡️ Using API URL:", import.meta.env.VITE_API_BASE_URL);
+  // ✅ Sync token on login/signup/logout
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const latest = localStorage.getItem('token');
+      setToken(latest && latest !== 'null' && latest !== 'undefined' ? latest : null);
+    };
+    window.addEventListener('storage', handleStorageChange);
+    handleStorageChange();
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-  // ✅ Fetch Problems
-  axios
-    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
-      headers: {
-        Accept: 'application/json',
-        Authorization: token ? `Token ${token}` : undefined,
-      },
-    })
-    .then((res) => {
-      const fetchedProblems = Array.isArray(res.data.results) ? res.data.results : res.data;
-      console.log("✅ Problems from API:", fetchedProblems);
-      console.log(res);
-      setProblems(fetchedProblems);
-    })
-    .catch((err) => {
-      console.error('❌ Failed to fetch problems:', err.message || err);
-      if (err.response && err.response.data) {
-        console.error("📄 Server response:", err.response.data);
-      }
-    });
+  // ✅ Fetch problems and solved state
+  useEffect(() => {
+    if (!token) {
+      setProblems([]);
+      setSolvedProblems([]);
+      setSelectedProblem(null);
+      setOutput('');
+      setStatus('');
+      setCode('');
+      return;
+    }
 
-  // ✅ If not logged in, skip solved problem fetch
-  if (!token) {
-    setSolvedProblems([]);
-    return;
-  }
+    axios
+      .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/problems/`, {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Token ${token}`,
+        },
+      })
+      .then((res) => {
+        const fetchedProblems = Array.isArray(res.data.results) ? res.data.results : res.data;
+        setProblems(fetchedProblems);
+      })
+      .catch((err) => {
+        console.error('❌ Failed to fetch problems:', err.message || err);
+        setProblems([]);
+      });
 
-  // ✅ Fetch Solved Problems
-  axios
-    .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
-      headers: {
-        Authorization: `Token ${token}`,
-        Accept: 'application/json',
-      },
-    })
-    .then((res) => {
-      if (res.data && Array.isArray(res.data.solved_ids)) {
-        setSolvedProblems(res.data.solved_ids);
-      } else {
-        console.warn("⚠️ Unexpected response format for solved problems:", res.data);
+    axios
+      .get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
+        headers: {
+          Authorization: `Token ${token}`,
+          Accept: 'application/json',
+        },
+      })
+      .then((res) => {
+        if (res.data && Array.isArray(res.data.solved_ids)) {
+          setSolvedProblems(res.data.solved_ids);
+        } else {
+          setSolvedProblems([]);
+        }
+      })
+      .catch((err) => {
+        console.error('❌ Could not fetch solved problems:', err.message || err);
         setSolvedProblems([]);
-      }
-    })
-    .catch((err) => {
-      console.error("❌ Could not fetch solved problems:", err.message || err);
-      if (err.response && err.response.data) {
-        console.error("📄 Error details:", err.response.data);
-      }
-    });
-}, []);
-
+      });
+  }, [token]);
 
   const handleProblemSelect = (problem) => {
     setSelectedProblem(problem);
@@ -90,8 +98,6 @@ const OnlineJudge = () => {
 
   const handleRunCode = async () => {
     if (!selectedProblem) return;
-
-    const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in to run code.');
       return;
@@ -100,7 +106,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
+        `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,
@@ -117,8 +123,8 @@ const OnlineJudge = () => {
       const detail = response.data.details?.[0];
       setOutput(
         `Sample Test Case ${detail.status === 'Passed' ? 'Passed' : 'Failed'}\n` +
-        `Expected Output: ${detail.expected}\n` +
-        `Your Output: ${detail.actual}`
+          `Expected Output: ${detail.expected}\n` +
+          `Your Output: ${detail.actual}`
       );
       setStatus(detail.status);
     } catch (error) {
@@ -131,8 +137,6 @@ const OnlineJudge = () => {
 
   const handleSubmit = async () => {
     if (!selectedProblem) return;
-
-    const token = localStorage.getItem('token');
     if (!token) {
       alert('Please log in to submit solutions.');
       return;
@@ -141,7 +145,7 @@ const OnlineJudge = () => {
     setIsRunning(true);
     try {
       const response = await axios.post(
-         `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
+        `${import.meta.env.VITE_API_BASE_URL}/compiler/submit/`,
         {
           language: language === 'python' ? 'py' : 'cpp',
           problem_id: selectedProblem.id,
@@ -160,26 +164,24 @@ const OnlineJudge = () => {
 
       setOutput(
         `Submission Result:\nStatus: ${statusText}\n` +
-        (allPassed
-          ? `All test cases passed!`
-          : response.data.details
-              .map(
-                (test, idx) =>
-                  `Test Case ${idx + 1}: ${test.status}\nExpected: ${test.expected}\nYour Output: ${test.actual}`
-              )
-              .join('\n\n'))
+          (allPassed
+            ? `All test cases passed!`
+            : response.data.details
+                .map(
+                  (test, idx) =>
+                    `Test Case ${idx + 1}: ${test.status}\nExpected: ${test.expected}\nYour Output: ${test.actual}`
+                )
+                .join('\n\n'))
       );
 
       setStatus(statusText);
 
-      // ✅ Re-fetch solved problems after successful submission
-      const solvedRes = await axios.get( `${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
+      const solvedRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved/`, {
         headers: {
           Authorization: `Token ${token}`,
         },
       });
       setSolvedProblems(solvedRes.data.solved_ids);
-
     } catch (error) {
       setOutput(`Error\n${error.response?.data?.error || error.message}`);
       setStatus('Error');
@@ -199,9 +201,10 @@ const OnlineJudge = () => {
         handleLanguageChange={handleLanguageChange}
       />
 
-      {!selectedProblem ? (
+      {!token ? (
+        <div className="text-center text-gray-400 text-lg py-8">Please log in to view problems.</div>
+      ) : !selectedProblem ? (
         <ProblemList
-          
           problems={problems}
           handleProblemSelect={handleProblemSelect}
           solvedProblems={solvedProblems}

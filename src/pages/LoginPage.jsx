@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
@@ -36,54 +37,54 @@ const LoginPage = () => {
     });
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  const url = isLogin
-    ? `${API_BASE_URL}/api/login/`
-    : `${API_BASE_URL}/api/signup/`;
+    const url = isLogin
+      ? `${API_BASE_URL}/api/login/`
+      : `${API_BASE_URL}/api/signup/`;
 
-  const payload = isLogin
-    ? { username: formData.email, password: formData.password }
-    : { username: formData.email, password: formData.password, name: formData.name };
+    const payload = isLogin
+      ? { username: formData.email, password: formData.password }
+      : { username: formData.email, password: formData.password, name: formData.name };
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    const data = await response.json();
-    setIsLoading(false);
+      const data = await response.json();
+      setIsLoading(false);
 
-    if (response.ok) {
-      alert('Success: ' + data.message);
+      if (response.ok) {
+        alert('Success: ' + data.message);
 
-      // Store token and login info
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userEmail', formData.email);
+        // ✅ Store all login info
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userEmail', formData.email);
+        localStorage.setItem('token', data.token);  // ✅ Always set token
 
-      if (isLogin) {
-        localStorage.setItem('token', data.token);  // ✅ store token
-        localStorage.setItem('userName', data.name || formData.email.split('@')[0]);
+        if (isLogin) {
+          localStorage.setItem('userName', data.name || formData.email.split('@')[0]);
+        } else {
+          localStorage.setItem('userName', formData.name);
+        }
+
+        window.dispatchEvent(new Event('storage')); // ✅ Notify OnlineJudge
+        window.location.href = '/'; // ✅ Redirect to homepage
       } else {
-        localStorage.setItem('userName', formData.name);
+        alert('Error: ' + (data.error || 'Unknown error occurred'));
       }
 
-      window.location.href = '/';
-    } else {
-      alert('Error: ' + (data.error || 'Unknown error occurred'));
+    } catch (error) {
+      console.error('Error:', error);
+      setIsLoading(false);
+      alert('Error connecting to the server.');
     }
-
-  } catch (error) {
-    console.error('Error:', error);
-    setIsLoading(false);
-    alert('Error connecting to the server.');
-  }
-};
-
+  };
 
   const switchMode = () => {
     setIsLogin(!isLogin);

@@ -4,23 +4,41 @@ const Header = ({ navigate, selectedProblem, setSelectedProblem, problems, langu
   const [solvedCount, setSolvedCount] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved-count/`, {
-        headers: {
-          Authorization: `Token ${token}`,
-        },
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.solved_count !== undefined) {
-            setSolvedCount(data.solved_count);
-          }
+    const fetchSolvedCount = () => {
+      const token = localStorage.getItem('token');
+
+      if (token && token !== 'null' && token !== 'undefined') {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/compiler/api/solved-count/`, {
+          headers: {
+            Authorization: `Token ${token}`,
+          },
         })
-        .catch(err => {
-          console.error("Failed to fetch solved count:", err);
-        });
-    }
+          .then(res => res.json())
+          .then(data => {
+            if (data.solved_count !== undefined) {
+              setSolvedCount(data.solved_count);
+            } else {
+              setSolvedCount(null);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to fetch solved count:", err);
+            setSolvedCount(null);
+          });
+      } else {
+        setSolvedCount(null);
+      }
+    };
+
+    fetchSolvedCount();
+
+    // ✅ Watch for logout/login events (sync across tabs)
+    const handleStorageChange = () => {
+      fetchSolvedCount();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   return (

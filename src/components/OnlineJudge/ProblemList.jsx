@@ -3,6 +3,7 @@ import ProblemRow from './ProblemRow';
 
 const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
   const isValidList = Array.isArray(problems) && problems.length > 0;
+  const solved = Array.isArray(solvedProblems) ? solvedProblems : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -27,7 +28,7 @@ const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
               <div className="w-2 h-2 bg-red-500 rounded-full"></div>
             </div>
             <div className="text-xs text-gray-500 font-mono">
-              {Array.isArray(problems) ? problems.length : 0} problem{problems.length !== 1 ? 's' : ''}
+              {isValidList ? problems.length : 0} problem{isValidList && problems.length !== 1 ? 's' : ''}
             </div>
           </div>
         </div>
@@ -46,7 +47,7 @@ const ProblemList = ({ problems, handleProblemSelect, solvedProblems }) => {
                 <ProblemRow
                   problem={problem}
                   handleProblemSelect={handleProblemSelect}
-                  isSolved={solvedProblems?.includes(problem.id)}
+                  isSolved={solved.includes(problem.id)}
                 />
               </div>
             ))
